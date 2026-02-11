@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@tsconfig/node24": "^24.0.4",
+    "@types/geojson": "^7946.0.16",
     "@types/jsdom": "^27.0.0",
     "@types/node": "^24.10.9",
     "@vitejs/plugin-vue": "^6.0.3",
