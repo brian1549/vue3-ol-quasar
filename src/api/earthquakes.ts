@@ -35,12 +35,3 @@ export async function getEarthquakes(options?: {
     if (cache) cache.inFlight = undefined;
   }
 }
-
-export async function getEarthquakesRaw() {
-  const res = await fetch(USGS_URL);
-  if (!res.ok) throw new Error(`USGS fetch failed: ${res.status} ${res.statusText}`);
-  const data = (await res.json()) as EarthquakeFeatureCollection;
-
-  cache = { value: data, expiresAt: now + ttlMs };
-  return data;
-}
