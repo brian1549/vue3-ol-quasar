@@ -1,7 +1,7 @@
 import type { EarthquakeFeatureCollection } from '@/components/types';
 import type { CacheEntry } from './types';
 
-const USGS_URL = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson';
+export const USGS_URL = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson';
 
 let cache: CacheEntry<EarthquakeFeatureCollection> | null = null;
 
@@ -34,4 +34,13 @@ export async function getEarthquakes(options?: {
     // clear inFlight whether success or error
     if (cache) cache.inFlight = undefined;
   }
+}
+
+export async function getEarthquakesRaw() {
+  const res = await fetch(USGS_URL);
+  if (!res.ok) throw new Error(`USGS fetch failed: ${res.status} ${res.statusText}`);
+  const data = (await res.json()) as EarthquakeFeatureCollection;
+
+  cache = { value: data, expiresAt: now + ttlMs };
+  return data;
 }

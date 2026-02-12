@@ -4,45 +4,26 @@ import OlMap from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
 import OSM from 'ol/source/OSM';
-import type { EarthquakeFeature, EarthquakeFeatureCollection } from './types';
+import type { EarthquakeFeatureCollection } from './types';
 import { getEarthquakes } from '@/api/earthquakes';
-import { isNumber } from 'lodash-es';
 import { useEarthquakeLayers } from '@/composables/useEarthquakeLayers';
+import OlMapLegend from '@/components/OlMapLegend.vue';
+import { bucketByHalfMagnitude } from '@/utils/earthquakeUtils';
 
 const mapEl = ref<HTMLDivElement | null>(null);
-let map: OlMap | null = null;
-const earthquakeLayers = useEarthquakeLayers();
 const bucketKeys = ref<string[]>([]);
 
-// Bucket into 0.5 magnitude bins (e.g., "2.0-2.5")
-function bucketByHalfMagnitude(features: EarthquakeFeature[]): Map<string, EarthquakeFeature[]> {
-  return features.reduce((acc, quake) => {
-    const mag = quake.properties?.mag;
+let map: OlMap | null = null;
+const earthquakeLayers = useEarthquakeLayers();
 
-    if (!isNumber(mag)) {
-      return acc;
-    }
-
-    const low = Math.floor(mag * 2) / 2;
-    const high = low + 0.5;
-    const key = `${low.toFixed(1)}-${high.toFixed(1)}`;
-
-    if (acc.has(key)) {
-      acc.get(key)!.push(quake);
-    } else {
-      acc.set(key, [quake]);
-    }
-
-    return acc;
-  }, new Map<string, EarthquakeFeature[]>());
-}
-
-function toggleBucket(key: string, visible: boolean) {
+function toggle(key: string, visible: boolean): void {
   earthquakeLayers.setBucketVisible(key, visible);
+}
+function toggleAll(visible: boolean): void {
+  bucketKeys.value.forEach((key) => toggle(key, visible));
 }
 
 onMounted(async () => {
-  // New: manual fetch + bucketing
   const geojson: EarthquakeFeatureCollection = await getEarthquakes();
   const buckets = bucketByHalfMagnitude(geojson.features);
   bucketKeys.value = earthquakeLayers.sortKeys(buckets);
@@ -64,20 +45,15 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="relative-position" style="height: 500px; width: 100%">
-    <div ref="mapEl" style="height: 100%; width: 100%" />
-
-    <q-card class="q-pa-sm" style="position: absolute; top: 12px; right: 12px; width: 220px">
-      <div class="text-subtitle2 q-mb-sm">Earthquake layers</div>
-
-      <div v-for="key in bucketKeys" :key="key" class="row items-center justify-between q-py-xs">
-        <div class="text-caption">{{ key }}</div>
-        <q-toggle
-          :model-value="earthquakeLayers.getBucketVisible(key)"
-          dense
-          @update:model-value="(val) => toggleBucket(key, val)"
-        />
-      </div>
-    </q-card>
+  <div class="relative-position full-width" style="height: 500px">
+    <div ref="mapEl" class="full-width full-height" />
+    <div class="absolute-top-right q-ma-sm" style="width: 220px">
+      <OlMapLegend
+        :bucket-keys="bucketKeys"
+        :get-visible="earthquakeLayers.getBucketVisible"
+        @toggle="(key: string, val: boolean) => toggle(key, val)"
+        @toggle-all="(val: boolean) => toggleAll(val)"
+      />
+    </div>
   </div>
 </template>

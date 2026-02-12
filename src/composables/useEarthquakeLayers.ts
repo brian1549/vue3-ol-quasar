@@ -4,10 +4,11 @@ import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import type { EarthquakeFeature } from '@/components/types';
 import GeoJSON from 'ol/format/GeoJSON';
-import Style from 'ol/style/Style';
+import Style, { type StyleFunction } from 'ol/style/Style';
 import CircleStyle from 'ol/style/Circle';
 import Fill from 'ol/style/Fill';
 import Stroke from 'ol/style/Stroke';
+import type { FeatureLike } from 'ol/Feature';
 
 export type BucketKey = string;
 
@@ -32,7 +33,7 @@ export function useEarthquakeLayers() {
       const quakesSource = new VectorSource({ features: olFeatures });
       const quakesLayer = new VectorLayer({
         source: quakesSource,
-        style: createStyle(colors[index]),
+        style: createStyle(colors[index]!),
       });
 
       map.addLayer(quakesLayer);
@@ -56,8 +57,8 @@ export function useEarthquakeLayers() {
     return visibleByBucket.value.get(bucketKey) ?? true;
   }
 
-  function createStyle(color: string) {
-    return (feature) => {
+  function createStyle(color: string): StyleFunction {
+    return (feature: FeatureLike) => {
       const mag = feature.get('mag') ?? 0;
 
       return new Style({
