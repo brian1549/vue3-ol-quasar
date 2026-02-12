@@ -5,7 +5,9 @@ const USGS_URL = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_
 
 let cache: CacheEntry<EarthquakeFeatureCollection> | null = null;
 
-export async function getEarthquakes(options?: { ttlMs?: number }) {
+export async function getEarthquakes(options?: {
+  ttlMs?: number;
+}): Promise<EarthquakeFeatureCollection> {
   const ttlMs = options?.ttlMs ?? 5 * 60_000; // default 5 minutes
   const now = Date.now();
 
