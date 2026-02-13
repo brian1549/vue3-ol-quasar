@@ -16,7 +16,7 @@ describe('getEarthquakes', () => {
   });
 
   it('uses cache within TTL (only fetches once)', async () => {
-    const fetchSpy = vi.spyOn(handlers, 'mockGetEarthquakes');
+    const fetchSpy = vi.spyOn(handlers, 'getEarthquakesHandler');
 
     await getEarthquakes({ ttlMs: 60_000 });
     await getEarthquakes({ ttlMs: 60_000 });
@@ -26,7 +26,7 @@ describe('getEarthquakes', () => {
   });
 
   it('dedupes concurrent callers (only one fetch)', async () => {
-    const fetchSpy = vi.spyOn(handlers, 'mockGetEarthquakes');
+    const fetchSpy = vi.spyOn(handlers, 'getEarthquakesHandler');
 
     await Promise.all([
       getEarthquakes({ ttlMs: 60_000 }),
