@@ -8,12 +8,14 @@ import type { EarthquakeFeatureCollection } from './types';
 import { getEarthquakes } from '@/api/earthquakes';
 import { useEarthquakeLayers } from '@/composables/useEarthquakeLayers';
 import OlMapLegend from '@/components/OlMapLegend.vue';
+import OlMapTooltip from './OlMapTooltip.vue';
 import { bucketByHalfMagnitude } from '@/utils/earthquakeUtils';
 
 const mapEl = ref<HTMLDivElement | null>(null);
 const bucketKeys = ref<string[]>([]);
 
-let map: OlMap | null = null;
+const map = ref<OlMap | null>(null);
+
 const earthquakeLayers = useEarthquakeLayers();
 
 function toggle(key: string, visible: boolean): void {
@@ -28,19 +30,19 @@ onMounted(async () => {
   const buckets = bucketByHalfMagnitude(geojson.features);
   bucketKeys.value = earthquakeLayers.sortKeys(buckets);
 
-  map = new OlMap({
+  map.value = new OlMap({
     target: mapEl.value as HTMLDivElement,
     layers: [new TileLayer({ source: new OSM() })],
     view: new View({ center: [0, 0], zoom: 2 }),
   });
 
-  earthquakeLayers.buildLayers(map, buckets);
+  earthquakeLayers.buildLayers(map.value as OlMap, buckets);
 });
 
 onBeforeUnmount(() => {
-  earthquakeLayers.teardown(map ?? undefined);
-  map?.setTarget(undefined);
-  map = null;
+  earthquakeLayers.teardown((map.value as OlMap) ?? undefined);
+  map.value?.setTarget(undefined);
+  map.value = null;
 });
 </script>
 
@@ -54,6 +56,7 @@ onBeforeUnmount(() => {
         @toggle="(key: string, val: boolean) => toggle(key, val)"
         @toggle-all="(val: boolean) => toggleAll(val)"
       />
+      <OlMapTooltip v-if="map" :map="map as OlMap" />
     </div>
   </div>
 </template>
